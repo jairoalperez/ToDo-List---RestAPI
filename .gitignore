@@ -1,0 +1,47 @@
+# Ignore Visual Studio and Rider user-specific files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.iml
+
+# Ignore build directories
+bin/
+obj/
+TestResults/
+*.nupkg
+*.snupkg
+*.log
+*.cache
+*.pdb
+*.mdb
+
+# Ignore generated package and dependency files
+*.dll
+*.exe
+*.app
+*.dylib
+*.so
+
+# Ignore publish configurations
+.publish/
+.publishSettings
+.vscode/launch.json
+.vscode/tasks.json
+
+# Ignore temporary, security, and backup files
+*.bak
+*.tmp
+*.swp
+*.lock
+*.log
+*.DS_Store
+Thumbs.db
+
+# Ignore NuGet packages and .NET SDK folders
+packages/
+project.lock.json
+project.fragment.lock.json
+.nuget/
