@@ -38,9 +38,15 @@ public class ToDoListController : ControllerBase
 
 
     [HttpGet("{taskId}")]
-    public ActionResult<Task> GetTask([FromRoute] int TaskId)
+    public ActionResult<Task> GetTask([FromRoute] int taskId)
     {
-        return Ok();
+        var task = TasksDataStore.Current.Tasks.FirstOrDefault(i => i.Id == taskId);
+        if (task == null)
+        {
+            return Problem(Messages.Task.NotFound);
+        }
+
+        return Ok(task);
     }
 
 
