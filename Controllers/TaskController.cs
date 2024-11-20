@@ -24,11 +24,18 @@ public class ToDoListController : ControllerBase
         return Ok(allTasks);
     }
 
+
     [HttpGet("user/{userId}")]
-    public ActionResult<IEnumerable<Task>> GetUserTasks([FromRoute] int UserId)
+    public ActionResult<IEnumerable<Task>> GetUserTasks([FromRoute] int userId)
     {
-        return Ok();
+        var userTasks = TasksDataStore.Current.Tasks.Where(i => i.UserId == userId).ToList();
+        if (userTasks.Count < 1) 
+        {
+            return Problem(Messages.Task.NoUserTasks);
+        }
+        return Ok(userTasks);
     }
+
 
     [HttpGet("{taskId}")]
     public ActionResult<Task> GetTask([FromRoute] int TaskId)
@@ -36,11 +43,13 @@ public class ToDoListController : ControllerBase
         return Ok();
     }
 
+
     [HttpPost("create")]
     public ActionResult<Task> PostTask()
     {
         return Ok();
     }
+
 
     [HttpPut("edit/{taskId}")]
     public ActionResult<Task> PutTask([FromRoute] int taskId)
@@ -48,17 +57,20 @@ public class ToDoListController : ControllerBase
         return Ok();
     }
 
+
     [HttpDelete("delete/all")]
     public ActionResult<IEnumerable<Task>> DeleteAllTasks()
     {
         return Ok();
     }
 
+
     [HttpDelete("delete/user/{userId}")]
     public ActionResult<IEnumerable<Task>> DeleteUserTasks()
     {
         return Ok();
     }
+
 
     [HttpDelete("delete/{task}")]
     public ActionResult<Task> DeleteTask()
