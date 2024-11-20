@@ -8,7 +8,7 @@ using Task = ToDoList_RestAPI.Models.Task;
 namespace ToDoList_RestAPI.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("[controller]/task")]
 public class ToDoListController : ControllerBase
 {
     [HttpGet("all")]
