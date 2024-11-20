@@ -2,6 +2,7 @@ using System.Collections;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList_RestAPI.Models;
 using ToDoList_RestAPI.Services;
+using ToDoList_RestAPI.Helpers;
 using Task = ToDoList_RestAPI.Models.Task;
 
 namespace ToDoList_RestAPI.Controllers;
@@ -13,7 +14,14 @@ public class ToDoListController : ControllerBase
     [HttpGet("all")]
     public ActionResult<IEnumerable<Task>> GetAllTasks()
     {
-        return Ok();
+        var allTasks = TasksDataStore.Current.Tasks;
+
+        if (allTasks.Count < 1)
+        {
+            return Problem(Messages.Task.NoTasks);
+        }
+
+        return Ok(allTasks);
     }
 
     [HttpGet("user/{userId}")]
