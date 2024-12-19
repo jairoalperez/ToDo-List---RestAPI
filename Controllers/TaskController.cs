@@ -108,36 +108,41 @@ public class ToDoListController : ControllerBase
         }
     }
 
-
     [HttpPut("edit/{taskId}")]
-    public ActionResult<Task> PutTask([FromRoute] int taskId, [FromBody] TaskInsert taskInsert)
+    public async Task<ActionResult<Task>> PutTask([FromRoute] int taskId, [FromBody] TaskInsert taskInsert)
     {
-        var task = TasksDataStore.Current.Tasks.FirstOrDefault(i => i.Id == taskId);
-        if (task == null)
+        try
         {
-            return Problem(Messages.Task.NotFound);
-        }
-
-        task.Title = taskInsert.Title;
-        task.Description = taskInsert.Description;
-        task.StimatedDate = taskInsert.StimatedDate;
-        task.StartingDate = taskInsert.StartingDate;
-        task.CompletionDate = taskInsert.CompletionDate;
-        task.IsCompleted = taskInsert.IsCompleted;
-        task.CurrentState = taskInsert.CurrentState;
-        task.Priority = taskInsert.Priority;
-
-        return CreatedAtAction(
-            nameof(GetTask),
-            new { taskId = task.Id },
-            new
+            var task = await _context.Tasks.FirstOrDefaultAsync(i => i.Id == taskId);
+            if (task == null)
             {
-                Message = Messages.Task.TaskEdited,
-                Task = task
+                return NotFound(Messages.Task.NotFound);
             }
-        );
-    }
 
+            task.UserId = taskInsert.UserId;
+            task.Title = taskInsert.Title;
+            task.Description = taskInsert.Description;
+            task.StimatedDate = taskInsert.StimatedDate;
+            task.StartingDate = taskInsert.StartingDate;
+            task.CompletionDate = taskInsert.CompletionDate;
+            task.IsCompleted = taskInsert.IsCompleted;
+            task.CurrentState = taskInsert.CurrentState;
+            task.Priority = taskInsert.Priority;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+                {
+                    Message = Messages.Task.TaskEdited,
+                    Task = task
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
+    }
 
     [HttpDelete("delete/all")]
     public ActionResult<IEnumerable<Task>> DeleteAllTasks()
@@ -154,7 +159,6 @@ public class ToDoListController : ControllerBase
         return Ok(Messages.Task.AllTasksDeleted);
     }
 
-
     [HttpDelete("delete/user/{userId}")]
     public ActionResult<IEnumerable<Task>> DeleteUserTasks([FromRoute] int userId)
     {
@@ -168,7 +172,6 @@ public class ToDoListController : ControllerBase
 
         return Ok(Messages.Task.UserTasksDeleted);
     }
-
 
     [HttpDelete("delete/{taskId}")]
     public ActionResult<Task> DeleteTask([FromRoute] int taskId)
