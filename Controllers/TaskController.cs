@@ -1,6 +1,4 @@
-using System.Collections;
 using Microsoft.AspNetCore.Mvc;
-using ToDoList_RestAPI.Models;
 using ToDoList_RestAPI.Services;
 using ToDoList_RestAPI.Helpers;
 using Task = ToDoList_RestAPI.Models.Task;
@@ -10,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ToDoList_RestAPI.Controllers;
 
 [ApiController]
-[Route("[controller]/task")]
+[Route("api/task")]
 public class ToDoListController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -39,31 +37,42 @@ public class ToDoListController : ControllerBase
         }
     }
 
-
     [HttpGet("user/{userId}")]
-    public ActionResult<IEnumerable<Task>> GetUserTasks([FromRoute] int userId)
+    public async Task<ActionResult<Task>> GetUserTasks([FromRoute] int userId)
     {
-        var userTasks = TasksDataStore.Current.Tasks.Where(i => i.UserId == userId).ToList();
-        if (userTasks.Count < 1)
+        try
         {
-            return Problem(Messages.Task.NoUserTasks);
+            var userTasks = await _context.Tasks.Where(i => i.UserId == userId).ToListAsync();
+            if (userTasks.Count < 1)
+            {
+                return Problem(Messages.Task.NoUserTasks);
+            }
+            return Ok(userTasks);
         }
-        return Ok(userTasks);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
-
 
     [HttpGet("{taskId}")]
-    public ActionResult<Task> GetTask([FromRoute] int taskId)
+    public async Task<ActionResult> GetTask([FromRoute] int taskId)
     {
-        var task = TasksDataStore.Current.Tasks.FirstOrDefault(i => i.Id == taskId);
-        if (task == null)
+        try
         {
-            return Problem(Messages.Task.NotFound);
+            var task = await _context.Tasks.FirstOrDefaultAsync(i => i.Id == taskId);
+            if (task == null)
+            {
+                return Problem(Messages.Task.NotFound);
+            }
+
+            return Ok(task);
         }
-
-        return Ok(task);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
-
 
     [HttpPost("create")]
     public ActionResult<Task> PostTask([FromBody] TaskInsert taskInsert)
