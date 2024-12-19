@@ -39,6 +39,7 @@ TestResults/
 *.log
 *.DS_Store
 Thumbs.db
+.env
 
 # Ignore NuGet packages and .NET SDK folders
 packages/
