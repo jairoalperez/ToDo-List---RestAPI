@@ -5,6 +5,7 @@ using ToDoList_RestAPI.Services;
 using ToDoList_RestAPI.Helpers;
 using Task = ToDoList_RestAPI.Models.Task;
 using TaskInsert = ToDoList_RestAPI.Models.TaskInsert;
+using Microsoft.EntityFrameworkCore;
 
 namespace ToDoList_RestAPI.Controllers;
 
@@ -12,17 +13,30 @@ namespace ToDoList_RestAPI.Controllers;
 [Route("[controller]/task")]
 public class ToDoListController : ControllerBase
 {
-    [HttpGet("all")]
-    public ActionResult<IEnumerable<Task>> GetAllTasks()
+    private readonly AppDbContext _context;
+    public ToDoListController(AppDbContext context)
     {
-        var allTasks = TasksDataStore.Current.Tasks;
+        _context = context;
+    }
 
-        if (allTasks.Count < 1)
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllTasks()
+    {
+        try
         {
-            return Problem(Messages.Task.NoTasks);
-        }
+            var allTasks = await _context.Tasks.ToListAsync();
 
-        return Ok(allTasks);
+            if (allTasks.Count < 1)
+            {
+                return NotFound(Messages.Task.NoTasks);
+            }
+
+            return Ok(allTasks);
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 
 
@@ -30,7 +44,7 @@ public class ToDoListController : ControllerBase
     public ActionResult<IEnumerable<Task>> GetUserTasks([FromRoute] int userId)
     {
         var userTasks = TasksDataStore.Current.Tasks.Where(i => i.UserId == userId).ToList();
-        if (userTasks.Count < 1) 
+        if (userTasks.Count < 1)
         {
             return Problem(Messages.Task.NoUserTasks);
         }
@@ -55,7 +69,7 @@ public class ToDoListController : ControllerBase
     public ActionResult<Task> PostTask([FromBody] TaskInsert taskInsert)
     {
 
-        var maxTaskId = TasksDataStore.Current.Tasks.DefaultIfEmpty(new Task {Id = 0}).Max(x => x.Id);
+        var maxTaskId = TasksDataStore.Current.Tasks.DefaultIfEmpty(new Task { Id = 0 }).Max(x => x.Id);
 
         var newTask = new Task()
         {
@@ -76,8 +90,9 @@ public class ToDoListController : ControllerBase
 
         return CreatedAtAction(
             nameof(GetTask),
-            new {taskId = newTask.Id},
-            new {
+            new { taskId = newTask.Id },
+            new
+            {
                 Message = Messages.Task.TaskCreated,
                 Task = newTask
             }
@@ -105,8 +120,9 @@ public class ToDoListController : ControllerBase
 
         return CreatedAtAction(
             nameof(GetTask),
-            new {taskId = task.Id},
-            new {
+            new { taskId = task.Id },
+            new
+            {
                 Message = Messages.Task.TaskEdited,
                 Task = task
             }
@@ -134,7 +150,7 @@ public class ToDoListController : ControllerBase
     public ActionResult<IEnumerable<Task>> DeleteUserTasks([FromRoute] int userId)
     {
         var userTasks = TasksDataStore.Current.Tasks.Where(i => i.UserId == userId).ToList();
-        if (userTasks.Count < 1) 
+        if (userTasks.Count < 1)
         {
             return Problem(Messages.Task.NoUserTasks);
         }
