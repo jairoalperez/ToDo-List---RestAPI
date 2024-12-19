@@ -75,37 +75,37 @@ public class ToDoListController : ControllerBase
     }
 
     [HttpPost("create")]
-    public ActionResult<Task> PostTask([FromBody] TaskInsert taskInsert)
+    public async Task<ActionResult<Task>> PostTask([FromBody] TaskInsert taskInsert)
     {
-
-        var maxTaskId = TasksDataStore.Current.Tasks.DefaultIfEmpty(new Task { Id = 0 }).Max(x => x.Id);
-
-        var newTask = new Task()
+        try
         {
-            Id = maxTaskId + 1,
-            UserId = taskInsert.UserId,
-            Title = taskInsert.Title,
-            Description = taskInsert.Description,
-            CreationDate = DateTime.Now,
-            StimatedDate = taskInsert.StimatedDate,
-            StartingDate = taskInsert.StartingDate,
-            CompletionDate = taskInsert.CompletionDate,
-            IsCompleted = taskInsert.IsCompleted,
-            CurrentState = taskInsert.CurrentState,
-            Priority = taskInsert.Priority
-        };
+            var newTask = new Task()
+            {
+                UserId = taskInsert.UserId,
+                Title = taskInsert.Title,
+                Description = taskInsert.Description,
+                StimatedDate = taskInsert.StimatedDate,
+                StartingDate = taskInsert.StartingDate,
+                CompletionDate = taskInsert.CompletionDate,
+                IsCompleted = taskInsert.IsCompleted,
+                CurrentState = taskInsert.CurrentState,
+                Priority = taskInsert.Priority
+            };
 
-        TasksDataStore.Current.Tasks.Add(newTask);
+            _context.Tasks.Add(newTask);
+            await _context.SaveChangesAsync();
 
-        return CreatedAtAction(
-            nameof(GetTask),
-            new { taskId = newTask.Id },
-            new
+            return Ok(new
             {
                 Message = Messages.Task.TaskCreated,
                 Task = newTask
             }
-        );
+            );
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 
 
