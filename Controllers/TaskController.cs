@@ -192,14 +192,21 @@ public class ToDoListController : ControllerBase
     [HttpDelete("delete/{taskId}")]
     public ActionResult<Task> DeleteTask([FromRoute] int taskId)
     {
-        var task = TasksDataStore.Current.Tasks.FirstOrDefault(x => x.Id == taskId);
-        if (task == null)
+        try
         {
-            return Problem(Messages.Task.NotFound);
+            var task = TasksDataStore.Current.Tasks.FirstOrDefault(x => x.Id == taskId);
+            if (task == null)
+            {
+                return Problem(Messages.Task.NotFound);
+            }
+
+            TasksDataStore.Current.Tasks.Remove(task);
+
+            return Ok(Messages.Task.TaskDeleted);
         }
-
-        TasksDataStore.Current.Tasks.Remove(task);
-
-        return Ok(Messages.Task.TaskDeleted);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 }
