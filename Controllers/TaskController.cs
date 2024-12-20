@@ -132,10 +132,10 @@ public class ToDoListController : ControllerBase
             await _context.SaveChangesAsync();
 
             return Ok(new
-                {
-                    Message = Messages.Task.TaskEdited,
-                    Task = task
-                }
+            {
+                Message = Messages.Task.TaskEdited,
+                Task = task
+            }
             );
         }
         catch (Exception ex)
@@ -145,18 +145,26 @@ public class ToDoListController : ControllerBase
     }
 
     [HttpDelete("delete/all")]
-    public ActionResult<IEnumerable<Task>> DeleteAllTasks()
+    public async Task<IActionResult> DeleteAllTasks()
     {
-        var allTasks = TasksDataStore.Current.Tasks;
-
-        if (allTasks.Count < 1)
+        try
         {
-            return Problem(Messages.Task.NoTasks);
+            var allTasks = await _context.Tasks.ToListAsync();
+
+            if (allTasks.Count < 1)
+            {
+                return Problem(Messages.Task.NoTasks);
+            }
+
+            _context.Tasks.RemoveRange(allTasks);
+            await _context.SaveChangesAsync();
+
+            return Ok(Messages.Task.AllTasksDeleted);
         }
-
-        TasksDataStore.Current.Tasks.Clear();
-
-        return Ok(Messages.Task.AllTasksDeleted);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 
     [HttpDelete("delete/user/{userId}")]
