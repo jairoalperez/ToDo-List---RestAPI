@@ -190,17 +190,18 @@ public class ToDoListController : ControllerBase
     }
 
     [HttpDelete("delete/{taskId}")]
-    public ActionResult<Task> DeleteTask([FromRoute] int taskId)
+    public async Task<IActionResult> DeleteTask([FromRoute] int taskId)
     {
         try
         {
-            var task = TasksDataStore.Current.Tasks.FirstOrDefault(x => x.Id == taskId);
+            var task = await _context.Tasks.FirstOrDefaultAsync(i => i.Id == taskId);
             if (task == null)
             {
                 return Problem(Messages.Task.NotFound);
             }
 
-            TasksDataStore.Current.Tasks.Remove(task);
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
 
             return Ok(Messages.Task.TaskDeleted);
         }
