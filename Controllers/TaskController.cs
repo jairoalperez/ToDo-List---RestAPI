@@ -168,17 +168,25 @@ public class ToDoListController : ControllerBase
     }
 
     [HttpDelete("delete/user/{userId}")]
-    public ActionResult<IEnumerable<Task>> DeleteUserTasks([FromRoute] int userId)
+    public async Task<IActionResult> DeleteUserTasks([FromRoute] int userId)
     {
-        var userTasks = TasksDataStore.Current.Tasks.Where(i => i.UserId == userId).ToList();
-        if (userTasks.Count < 1)
+        try
         {
-            return Problem(Messages.Task.NoUserTasks);
+            var userTasks = await _context.Tasks.Where(i => i.UserId == userId).ToListAsync();
+            if (userTasks.Count < 1)
+            {
+                return Problem(Messages.Task.NoUserTasks);
+            }
+
+            _context.Tasks.RemoveRange(userTasks);
+            await _context.SaveChangesAsync();
+
+            return Ok(Messages.Task.UserTasksDeleted);
         }
-
-        TasksDataStore.Current.Tasks.RemoveAll(task => task.UserId == userId);
-
-        return Ok(Messages.Task.UserTasksDeleted);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 
     [HttpDelete("delete/{taskId}")]
