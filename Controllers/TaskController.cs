@@ -1,161 +1,213 @@
-using System.Collections;
 using Microsoft.AspNetCore.Mvc;
-using ToDoList_RestAPI.Models;
 using ToDoList_RestAPI.Services;
 using ToDoList_RestAPI.Helpers;
 using Task = ToDoList_RestAPI.Models.Task;
 using TaskInsert = ToDoList_RestAPI.Models.TaskInsert;
+using Microsoft.EntityFrameworkCore;
 
 namespace ToDoList_RestAPI.Controllers;
 
 [ApiController]
-[Route("[controller]/task")]
+[Route("api/task")]
 public class ToDoListController : ControllerBase
 {
-    [HttpGet("all")]
-    public ActionResult<IEnumerable<Task>> GetAllTasks()
+    private readonly AppDbContext _context;
+    public ToDoListController(AppDbContext context)
     {
-        var allTasks = TasksDataStore.Current.Tasks;
-
-        if (allTasks.Count < 1)
-        {
-            return Problem(Messages.Task.NoTasks);
-        }
-
-        return Ok(allTasks);
+        _context = context;
     }
 
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllTasks()
+    {
+        try
+        {
+            var allTasks = await _context.Tasks.ToListAsync();
+
+            if (allTasks.Count < 1)
+            {
+                return NotFound(Messages.Task.NoTasks);
+            }
+
+            return Ok(allTasks);
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
+    }
 
     [HttpGet("user/{userId}")]
-    public ActionResult<IEnumerable<Task>> GetUserTasks([FromRoute] int userId)
+    public async Task<ActionResult<Task>> GetUserTasks([FromRoute] int userId)
     {
-        var userTasks = TasksDataStore.Current.Tasks.Where(i => i.UserId == userId).ToList();
-        if (userTasks.Count < 1) 
+        try
         {
-            return Problem(Messages.Task.NoUserTasks);
+            var userTasks = await _context.Tasks.Where(i => i.UserId == userId).ToListAsync();
+            if (userTasks.Count < 1)
+            {
+                return Problem(Messages.Task.NoUserTasks);
+            }
+            return Ok(userTasks);
         }
-        return Ok(userTasks);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
-
 
     [HttpGet("{taskId}")]
-    public ActionResult<Task> GetTask([FromRoute] int taskId)
+    public async Task<ActionResult> GetTask([FromRoute] int taskId)
     {
-        var task = TasksDataStore.Current.Tasks.FirstOrDefault(i => i.Id == taskId);
-        if (task == null)
+        try
         {
-            return Problem(Messages.Task.NotFound);
-        }
+            var task = await _context.Tasks.FirstOrDefaultAsync(i => i.Id == taskId);
+            if (task == null)
+            {
+                return Problem(Messages.Task.NotFound);
+            }
 
-        return Ok(task);
+            return Ok(task);
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 
-
     [HttpPost("create")]
-    public ActionResult<Task> PostTask([FromBody] TaskInsert taskInsert)
+    public async Task<ActionResult<Task>> PostTask([FromBody] TaskInsert taskInsert)
     {
-
-        var maxTaskId = TasksDataStore.Current.Tasks.DefaultIfEmpty(new Task {Id = 0}).Max(x => x.Id);
-
-        var newTask = new Task()
+        try
         {
-            Id = maxTaskId + 1,
-            UserId = taskInsert.UserId,
-            Title = taskInsert.Title,
-            Description = taskInsert.Description,
-            CreationDate = DateTime.Now,
-            StimatedDate = taskInsert.StimatedDate,
-            StartingDate = taskInsert.StartingDate,
-            CompletionDate = taskInsert.CompletionDate,
-            IsCompleted = taskInsert.IsCompleted,
-            CurrentState = taskInsert.CurrentState,
-            Priority = taskInsert.Priority
-        };
+            var newTask = new Task()
+            {
+                UserId = taskInsert.UserId,
+                Title = taskInsert.Title,
+                Description = taskInsert.Description,
+                StimatedDate = taskInsert.StimatedDate,
+                StartingDate = taskInsert.StartingDate,
+                CompletionDate = taskInsert.CompletionDate,
+                IsCompleted = taskInsert.IsCompleted,
+                CurrentState = taskInsert.CurrentState,
+                Priority = taskInsert.Priority
+            };
 
-        TasksDataStore.Current.Tasks.Add(newTask);
+            _context.Tasks.Add(newTask);
+            await _context.SaveChangesAsync();
 
-        return CreatedAtAction(
-            nameof(GetTask),
-            new {taskId = newTask.Id},
-            new {
+            return Ok(new
+            {
                 Message = Messages.Task.TaskCreated,
                 Task = newTask
             }
-        );
+            );
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 
-
     [HttpPut("edit/{taskId}")]
-    public ActionResult<Task> PutTask([FromRoute] int taskId, [FromBody] TaskInsert taskInsert)
+    public async Task<ActionResult<Task>> PutTask([FromRoute] int taskId, [FromBody] TaskInsert taskInsert)
     {
-        var task = TasksDataStore.Current.Tasks.FirstOrDefault(i => i.Id == taskId);
-        if (task == null)
+        try
         {
-            return Problem(Messages.Task.NotFound);
-        }
+            var task = await _context.Tasks.FirstOrDefaultAsync(i => i.Id == taskId);
+            if (task == null)
+            {
+                return NotFound(Messages.Task.NotFound);
+            }
 
-        task.Title = taskInsert.Title;
-        task.Description = taskInsert.Description;
-        task.StimatedDate = taskInsert.StimatedDate;
-        task.StartingDate = taskInsert.StartingDate;
-        task.CompletionDate = taskInsert.CompletionDate;
-        task.IsCompleted = taskInsert.IsCompleted;
-        task.CurrentState = taskInsert.CurrentState;
-        task.Priority = taskInsert.Priority;
+            task.UserId = taskInsert.UserId;
+            task.Title = taskInsert.Title;
+            task.Description = taskInsert.Description;
+            task.StimatedDate = taskInsert.StimatedDate;
+            task.StartingDate = taskInsert.StartingDate;
+            task.CompletionDate = taskInsert.CompletionDate;
+            task.IsCompleted = taskInsert.IsCompleted;
+            task.CurrentState = taskInsert.CurrentState;
+            task.Priority = taskInsert.Priority;
 
-        return CreatedAtAction(
-            nameof(GetTask),
-            new {taskId = task.Id},
-            new {
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
                 Message = Messages.Task.TaskEdited,
                 Task = task
             }
-        );
+            );
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
-
 
     [HttpDelete("delete/all")]
-    public ActionResult<IEnumerable<Task>> DeleteAllTasks()
+    public async Task<IActionResult> DeleteAllTasks()
     {
-        var allTasks = TasksDataStore.Current.Tasks;
-
-        if (allTasks.Count < 1)
+        try
         {
-            return Problem(Messages.Task.NoTasks);
+            var allTasks = await _context.Tasks.ToListAsync();
+
+            if (allTasks.Count < 1)
+            {
+                return Problem(Messages.Task.NoTasks);
+            }
+
+            _context.Tasks.RemoveRange(allTasks);
+            await _context.SaveChangesAsync();
+
+            return Ok(Messages.Task.AllTasksDeleted);
         }
-
-        TasksDataStore.Current.Tasks.Clear();
-
-        return Ok(Messages.Task.AllTasksDeleted);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
-
 
     [HttpDelete("delete/user/{userId}")]
-    public ActionResult<IEnumerable<Task>> DeleteUserTasks([FromRoute] int userId)
+    public async Task<IActionResult> DeleteUserTasks([FromRoute] int userId)
     {
-        var userTasks = TasksDataStore.Current.Tasks.Where(i => i.UserId == userId).ToList();
-        if (userTasks.Count < 1) 
+        try
         {
-            return Problem(Messages.Task.NoUserTasks);
+            var userTasks = await _context.Tasks.Where(i => i.UserId == userId).ToListAsync();
+            if (userTasks.Count < 1)
+            {
+                return Problem(Messages.Task.NoUserTasks);
+            }
+
+            _context.Tasks.RemoveRange(userTasks);
+            await _context.SaveChangesAsync();
+
+            return Ok(Messages.Task.UserTasksDeleted);
         }
-
-        TasksDataStore.Current.Tasks.RemoveAll(task => task.UserId == userId);
-
-        return Ok(Messages.Task.UserTasksDeleted);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 
-
     [HttpDelete("delete/{taskId}")]
-    public ActionResult<Task> DeleteTask([FromRoute] int taskId)
+    public async Task<IActionResult> DeleteTask([FromRoute] int taskId)
     {
-        var task = TasksDataStore.Current.Tasks.FirstOrDefault(x => x.Id == taskId);
-        if (task == null)
+        try
         {
-            return Problem(Messages.Task.NotFound);
+            var task = await _context.Tasks.FirstOrDefaultAsync(i => i.Id == taskId);
+            if (task == null)
+            {
+                return Problem(Messages.Task.NotFound);
+            }
+
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
+
+            return Ok(Messages.Task.TaskDeleted);
         }
-
-        TasksDataStore.Current.Tasks.Remove(task);
-
-        return Ok(Messages.Task.TaskDeleted);
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
     }
 }
