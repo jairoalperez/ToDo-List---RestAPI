@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using ToDoList_RestAPI.Helpers;
 using System.Text;
+
 
 namespace ToDoList_RestAPI.Helpers
 {
@@ -12,7 +14,7 @@ namespace ToDoList_RestAPI.Helpers
             var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
             if (string.IsNullOrEmpty(jwtKey))
             {
-                throw new InvalidOperationException("JWT Key is not configured.");
+                throw new InvalidOperationException(Messages.API.JWTNotConfigured);
             }
             var key = Encoding.UTF8.GetBytes(jwtKey);
             _ = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
