@@ -91,7 +91,12 @@ namespace ToDoList_RestAPI.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             string jwt = tokenHandler.WriteToken(token);
 
-            return Ok(new { token = jwt });
+            return Ok(new 
+            { 
+                userId = user.UserId,
+                username = user.Username,
+                token = jwt,
+            });
         }
 
     }
