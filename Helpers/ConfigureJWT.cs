@@ -15,7 +15,7 @@ namespace ToDoList_RestAPI.Helpers
                 throw new InvalidOperationException("JWT Key is not configured.");
             }
             var key = Encoding.UTF8.GetBytes(jwtKey);
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            _ = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
@@ -27,6 +27,26 @@ namespace ToDoList_RestAPI.Helpers
                         ValidIssuer = jwtIssuer,
                         ValidAudience = jwtIssuer,
                         IssuerSigningKey = new SymmetricSecurityKey(key)
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnAuthenticationFailed = context =>
+                        {
+                            context.Response.StatusCode = 401;
+                            return Task.CompletedTask;
+                        },
+                        OnChallenge = context =>
+                        {
+                            context.HandleResponse();
+                            context.Response.StatusCode = 401;
+                            context.Response.ContentType = "application/json";
+                            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                context.Response.StatusCode,
+                                Message = Messages.API.Unauthorized
+                            }));
+                        }
                     };
                 });
         }

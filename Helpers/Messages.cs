@@ -13,6 +13,8 @@ namespace ToDoList_RestAPI.Helpers
                                 = "The Content Data Rest API is working good!";
             public const string JWTNotConfigured
                                 = "JWT key is not configured";
+            public const string Unauthorized
+                                = "You are not authorized to do this request. (Token is missing or invalid)";
             
         }
 
