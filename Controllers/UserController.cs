@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using ToDoList_RestAPI.Helpers;
+using ToDoList_RestAPI.Models;
 
 namespace ToDoList_RestAPI.Controllers;
 
@@ -158,5 +159,53 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpPut("edit/{id}")]
+    public async Task<IActionResult> Edit([FromRoute] int id, [FromBody] UserInsert userInsert)
+    {
+        try
+        {
+            var userToEdit = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
+            if (userToEdit == null)
+            {
+                return NotFound(Messages.User.NotFound);
+            }
+
+            userToEdit.Username = userInsert.Username;
+            userToEdit.FirstName = userInsert.FirstName;
+            userToEdit.LastName = userInsert.LastName;
+            userToEdit.BirthDate = userInsert.BirthDate;
+            userToEdit.Email = userInsert.Email;
+            userToEdit.PhoneNumber = userInsert.PhoneNumber;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(Messages.User.Edited);
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
+    }
     
+    [HttpDelete("delete/{id}")]
+    public async Task<IActionResult> Delete([FromRoute] int id)
+    {
+        try
+        {
+            var userToDelete = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
+            if (userToDelete == null)
+            {
+                return NotFound(Messages.User.NotFound);
+            }
+
+            _context.Users.Remove(userToDelete);
+            await _context.SaveChangesAsync();
+
+            return Ok(Messages.User.Deleted);
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
+    }
 }

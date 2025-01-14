@@ -64,6 +64,10 @@ namespace ToDoList_RestAPI.Helpers
                                 = "Invalid username or password";
             public const string NotFound
                                 = "No users found";
+            public const string Edited
+                                = "User edited successfully";
+            public const string Deleted
+                                = "User deleted successfully";
         }
     
     }
