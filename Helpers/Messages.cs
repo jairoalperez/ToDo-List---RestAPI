@@ -15,6 +15,8 @@ namespace ToDoList_RestAPI.Helpers
                                 = "JWT key is not configured";
             public const string Unauthorized
                                 = "You are not authorized to do this request. (Token is missing or invalid)";
+            public const string PageZero
+                                = "Page number must be greater than 0";
             
         }
 
@@ -60,6 +62,8 @@ namespace ToDoList_RestAPI.Helpers
                                 = "User registered successfully";
             public const string WrongCredentials
                                 = "Invalid username or password";
+            public const string NotFound
+                                = "No users found";
         }
     
     }
