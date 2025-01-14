@@ -102,5 +102,33 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpGet("searchby/username/{username}")]
+    public async Task<IActionResult> GetByUsername([FromRoute] string username)
+    {
+        try
+        {
+            var user = await _context.Users.Include(u => u.Tasks).FirstOrDefaultAsync(u => u.Username == username);
+            if (user == null)
+            {
+                return NotFound(Messages.User.NotFound);
+            }
+
+            return Ok(new
+            {
+                user.UserId,
+                user.Username,
+                user.FirstName,
+                user.LastName,
+                user.BirthDate,
+                user.Email,
+                user.PhoneNumber
+            });
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
+    }
+
     
 }
