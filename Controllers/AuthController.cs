@@ -99,5 +99,26 @@ namespace ToDoList_RestAPI.Controllers
             });
         }
 
+        [HttpPost("changepassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordInsert changePasswordInsert)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == changePasswordInsert.Username);
+                if (user == null || !BCrypt.Net.BCrypt.Verify(changePasswordInsert.OldPassword, user.Password))
+                {
+                    return Unauthorized(Messages.User.WrongCredentials);
+                }
+
+                user.Password = BCrypt.Net.BCrypt.HashPassword(changePasswordInsert.NewPassword);
+                await _context.SaveChangesAsync();
+
+                return Ok(Messages.User.PasswordChanged);
+            }
+            catch (Exception ex)
+            {
+                return Problem(Messages.Database.ProblemRelated, ex.Message);
+            }
+        }
     }
 }

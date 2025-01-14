@@ -68,6 +68,9 @@ namespace ToDoList_RestAPI.Helpers
                                 = "User edited successfully";
             public const string Deleted
                                 = "User deleted successfully";
+            public const string PasswordChanged
+                                = "Password changed successfully";
+            
         }
     
     }
