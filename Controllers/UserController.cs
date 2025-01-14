@@ -170,6 +170,11 @@ public class UserController : ControllerBase
                 return NotFound(Messages.User.NotFound);
             }
 
+            if (_context.Users.Any(u => (u.Username == userInsert.Username && u.UserId != id) || (u.Email == userInsert.Email && u.UserId != id)))
+            {
+                return BadRequest(Messages.User.UserExists);
+            }
+
             userToEdit.Username = userInsert.Username;
             userToEdit.FirstName = userInsert.FirstName;
             userToEdit.LastName = userInsert.LastName;
@@ -186,7 +191,7 @@ public class UserController : ControllerBase
             return Problem(Messages.Database.ProblemRelated, ex.Message);
         }
     }
-    
+
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
