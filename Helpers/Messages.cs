@@ -11,6 +11,12 @@ namespace ToDoList_RestAPI.Helpers
         {
             public const string Working
                                 = "The Content Data Rest API is working good!";
+            public const string JWTNotConfigured
+                                = "JWT key is not configured";
+            public const string Unauthorized
+                                = "You are not authorized to do this request. (Token is missing or invalid)";
+            public const string PageZero
+                                = "Page number must be greater than 0";
             
         }
 
@@ -47,5 +53,25 @@ namespace ToDoList_RestAPI.Helpers
             public const string ProblemRelated
                                 = "Problem Related to the Database Call";
         }
+        
+        public static class User
+        {
+            public const string UserExists      
+                                = "This username or email is already in use";
+            public const string Registered
+                                = "User registered successfully";
+            public const string WrongCredentials
+                                = "Invalid username or password";
+            public const string NotFound
+                                = "No users found";
+            public const string Edited
+                                = "User edited successfully";
+            public const string Deleted
+                                = "User deleted successfully";
+            public const string PasswordChanged
+                                = "Password changed successfully";
+            
+        }
+    
     }
 }

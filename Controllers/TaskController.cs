@@ -4,9 +4,11 @@ using ToDoList_RestAPI.Helpers;
 using Task = ToDoList_RestAPI.Models.Task;
 using TaskInsert = ToDoList_RestAPI.Models.TaskInsert;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ToDoList_RestAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/task")]
 public class ToDoListController : ControllerBase

@@ -6,6 +6,9 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Process JWT configuration
+ConfigureJWT.AddJWT(builder.Services);
+
 // Process connection string
 var rawConnectionString = builder.Configuration.GetConnectionString("ToDoListDb")
                             ?? throw new InvalidOperationException(Messages.Database.NoConnectionString);
@@ -28,6 +31,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapControllers();
 
