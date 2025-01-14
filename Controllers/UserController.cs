@@ -130,5 +130,33 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpGet("searchby/email/{email}")]
+    public async Task<IActionResult> GetByEmail([FromRoute] string email)
+    {
+        try
+        {
+            var user = await _context.Users.Include(u => u.Tasks).FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                return NotFound(Messages.User.NotFound);
+            }
+
+            return Ok(new
+            {
+                user.UserId,
+                user.Username,
+                user.FirstName,
+                user.LastName,
+                user.BirthDate,
+                user.Email,
+                user.PhoneNumber
+            });
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
+    }
+
     
 }
