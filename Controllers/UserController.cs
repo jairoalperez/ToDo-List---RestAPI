@@ -74,5 +74,33 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpGet("searchby/id/{id}")]
+    public async Task<IActionResult> GetById([FromRoute] int id)
+    {
+        try
+        {
+            var user = await _context.Users.Include(u => u.Tasks).FirstOrDefaultAsync(u => u.UserId == id);
+            if (user == null)
+            {
+                return NotFound(Messages.User.NotFound);
+            }
+
+            return Ok(new
+            {
+                user.UserId,
+                user.Username,
+                user.FirstName,
+                user.LastName,
+                user.BirthDate,
+                user.Email,
+                user.PhoneNumber
+            });
+        }
+        catch (Exception ex)
+        {
+            return Problem(Messages.Database.ProblemRelated, ex.Message);
+        }
+    }
+
     
 }
